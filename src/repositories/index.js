@@ -38,18 +38,37 @@ export const endCustomerService = async (db, consumerPhone) => {
 
 export const getInitialStep = async (db) => {
   return await new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM steps WHERE parent = null`, (err, row) => {
+    db.all(`SELECT * FROM steps WHERE parent IS NULL`, (err, row) => {
       if (err) reject(err);
       resolve(row);
     })
   })
 }
 
-export const getNextStep = async(db, parent) => {
+export const getNextStep = async (db, parent) => {
   return await new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM steps WHERE parent = ${parent}`, (err, row) => {
+    db.all(`SELECT * FROM steps WHERE parent = '${parent}'`, (err, row) => {
       if (err) reject(err);
       resolve(row);
     })
   })
+}
+
+export const getCurrentStep = async (db, identifier, type) => {
+  if(type === 'question') {
+    return await new Promise((resolve, reject) => {
+      db.all(`SELECT * FROM steps WHERE identifier = '${identifier}'`, (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      })
+    })
+  }
+  
+  return await new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM steps WHERE parent = '${identifier}'`, (err, row) => {
+      if (err) reject(err);
+      resolve(row);
+    })
+  })
+  
 }

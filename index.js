@@ -1,33 +1,36 @@
 import venom from 'venom-bot';
 import { stepMessage } from './src/services/messages';
 import { getTrackConsumer } from './src/repositories';
+// import { seedDB } from './src/seeds';
+import prompts from 'prompts';
 import sqlite3 from 'sqlite3';
 const sqlite = sqlite3.verbose();
-const db = new sqlite.Database('./teste.db');
+const db = new sqlite.Database('./database.db');
 
-/*venom
-  .create({
-    session: 'session-bot',
-    multidevice: true // for version not multidevice use false.(default: true)
-  })
-  .then((client) => start(client))
-  .catch((erro) => {
-    console.log(erro);
-  });*/
 
-async function execute() {
-  const mockNumber = "31984452944-1231231@us.c";
-  const mockMsg = "Boa tarde"
+// venom
+//   .create({
+//     session: 'session-bot',
+//     multidevice: true
+//   })
+//   .then((client) => start(client))
+//   .catch((erro) => {
+//     console.log(erro);
+//   });
+
+
+async function execute(phoneNumber, consumerMessage) {
   try {
-    const responseMessage = await new Promise((resolve, reject) => {
-      db.run("CREATE TABLE IF NOT EXISTS trackConsumer (step TEXT, consumer TEXT)", async (err) => {
-        if (err) return resolve(null);
+    // await seedDB();
 
-        const track = await getTrackConsumer(db, String(mockNumber).split('@')[0]);
-        const responseMessage = await stepMessage(track, String(mockNumber).split('@')[0], mockMsg.trim(), db);
-        resolve(responseMessage);
-      });
-    })
+    const track = await getTrackConsumer(db, String(phoneNumber).split('@')[0]);
+
+    const responseMessage = await stepMessage(track, {
+      consumerMessage: consumerMessage.trim(),
+      consumerPhone: String(phoneNumber).split('@')[0],
+      db: db
+    });
+
     return responseMessage;
   } catch (error) {
     console.log('ERRO GENERICO: ', error)
@@ -35,14 +38,44 @@ async function execute() {
   }
 }
 
-console.log(await execute());
+// console.log(await execute('13212312-12312213@us.c', 'Hi'))
 
-/*function start(client) {
-  //Executando bot
+async function start(client) {
   client.onMessage(async (message) => {
     if (message.body && message.isGroupMsg === false) {
-      const responseMessage = execute();
-      if (responseMessage) return await client.sendText(message.from.split('-')[0], responseMessage);
+      console.log("msg: ", message.body)
+      console.log("message.from: ", message.from)
+      const responseMessages = await execute(message.from, message.body);
+      console.log("MSG: ", responseMessages);
+      if (!responseMessages) return;
+
+      for (const responseMessage of responseMessages) {
+        console.log('Num venom:', message.from)
+        console.log('Num Format :', message.from.split('-')[0])
+        client.sendText(message.from.split('-')[0], responseMessage.description);
+      }
+
+      return;
     }
   });
-}*/
+}
+
+(async () => {
+  const phoneNumber = await prompts({
+    type: 'text',
+    name: 'value',
+    message: 'Digite o seu numero de telefone: ',
+  });
+
+  const message = await prompts({
+    type: 'text',
+    name: 'value',
+    message: 'Digite a mensagem: ',
+  });
+
+  const responseMessages = await execute(phoneNumber.value, message.value);
+
+  for (const responseMessage of responseMessages) {
+    console.log(responseMessage);
+  }
+})();
