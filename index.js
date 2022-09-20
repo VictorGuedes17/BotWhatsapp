@@ -24,6 +24,15 @@ async function execute(phoneNumber, consumerMessage) {
     // await seedDB();
 
     const track = await getTrackConsumer(db, String(phoneNumber).split('@')[0]);
+    if (!track) {
+      const responseMessage = await stepMessage({ step: null, stepType: ''}, {
+        consumerMessage: consumerMessage.trim(),
+        consumerPhone: String(phoneNumber).split('@')[0],
+        db: db
+      });
+
+      return responseMessage;
+    }
 
     const responseMessage = await stepMessage(track, {
       consumerMessage: consumerMessage.trim(),
@@ -43,15 +52,10 @@ async function execute(phoneNumber, consumerMessage) {
 async function start(client) {
   client.onMessage(async (message) => {
     if (message.body && message.isGroupMsg === false) {
-      console.log("msg: ", message.body)
-      console.log("message.from: ", message.from)
       const responseMessages = await execute(message.from, message.body);
-      console.log("MSG: ", responseMessages);
       if (!responseMessages) return;
 
       for (const responseMessage of responseMessages) {
-        console.log('Num venom:', message.from)
-        console.log('Num Format :', message.from.split('-')[0])
         client.sendText(message.from.split('-')[0], responseMessage.description);
       }
 

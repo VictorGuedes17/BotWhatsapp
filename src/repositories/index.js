@@ -1,16 +1,16 @@
 import sqlite3 from 'sqlite3';
 const sqlite = sqlite3.verbose();
 
-export const addTrackConsumer = async (db, consumerPhone, step = 'initial') => {
+export const addTrackConsumer = async (db, consumerPhone, step = 'initial', stepType ) => {
   return await new Promise(async (resolve, reject) => {
     const alreadyExists = await getTrackConsumer(db, consumerPhone);
     if (alreadyExists) {
-      db.run(`UPDATE trackConsumer SET step = '${step}' WHERE consumer = ${String(consumerPhone)}`, (err) => {
+      db.run(`UPDATE trackConsumer SET step = '${step}', stepType = '${stepType}' WHERE consumer = ${String(consumerPhone)}`, (err) => {
         if (err) reject(err);
         resolve(true);
       })
     } else {
-      db.run(`INSERT INTO trackConsumer VALUES ('initial', ${String(consumerPhone)})`, (err) => {
+      db.run(`INSERT INTO trackConsumer VALUES ('initial', ${String(consumerPhone)}, '${String(stepType)}')`, (err) => {
         if (err) reject(err);
         resolve(true);
       })
@@ -20,9 +20,9 @@ export const addTrackConsumer = async (db, consumerPhone, step = 'initial') => {
 
 export const getTrackConsumer = async (db, consumerPhone) => {
   return await new Promise((resolve, reject) => {
-    db.get(`SELECT step FROM trackConsumer WHERE consumer = ${String(consumerPhone)}`, (err, row) => {
+    db.get(`SELECT step, stepType FROM trackConsumer WHERE consumer = ${String(consumerPhone)}`, (err, row) => {
       if (err) reject(err);
-      resolve(row ? row.step : null);
+      resolve(row ? { step: row.step, stepType: row.stepType } : null);
     })
   })
 }
@@ -63,7 +63,7 @@ export const getCurrentStep = async (db, identifier, type) => {
       })
     })
   }
-  
+
   return await new Promise((resolve, reject) => {
     db.all(`SELECT * FROM steps WHERE parent = '${identifier}'`, (err, row) => {
       if (err) reject(err);

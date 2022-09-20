@@ -8,6 +8,7 @@ node_modules/
 dist/
 build/
 tokens/
+database.db
 # Compiled Java class files
 *.class
 

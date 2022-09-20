@@ -4,7 +4,7 @@ const db = new sqlite.Database('./database.db');
 
 const seedDB = async () => {
   return await new Promise((resolve2, reject) => {
-    db.run("CREATE TABLE IF NOT EXISTS trackConsumer (step TEXT, consumer TEXT)", (err) => {
+    db.run("CREATE TABLE IF NOT EXISTS trackConsumer (step TEXT, consumer TEXT, stepType TEXT)", (err) => {
       if (err) reject(err);
 
       db.run("CREATE TABLE IF NOT EXISTS steps (orders INTEGER, identifier TEXT, description TEXT, parent TEXT, type TEXT, isLast INTEGER)", async (err) => {
@@ -73,6 +73,7 @@ const seedDB = async () => {
             resolve(true);
           })
         });
+        
         await new Promise((resolve, reject) => {
           db.run("INSERT INTO steps VALUES(1, '#sub010', 'Ok, em breve um atendente irar lhe atender. Lembrando que o horario de atendimento é de seg a sex de 9hrs as 18:30hrs e aos sabados de 9 as 14hrs.', '#sub003', 'msg', 0)", (err) => {
             if (err) reject(err);
